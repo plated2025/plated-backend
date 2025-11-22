@@ -1,0 +1,149 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+require('dotenv').config();
+
+const app = express();
+
+// Security Middleware
+app.use(helmet());
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000, // 15 minutes
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api/', limiter);
+
+// CORS Configuration
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow all localhost origins for development
+    if (!origin || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      callback(null, true);
+    } else if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
+  credentials: true
+}));
+
+// Body Parser Middleware
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Compression Middleware
+app.use(compression());
+
+// Logging Middleware
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
+
+// Passport Middleware (for Google/Apple OAuth)
+const passport = require('./config/passport');
+app.use(passport.initialize());
+
+// Cache Control for GET requests
+app.use((req, res, next) => {
+  if (req.method === 'GET') {
+    // Cache public recipe data for 5 minutes
+    if (req.url.startsWith('/api/recipes') || req.url.startsWith('/api/users')) {
+      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes
+    }
+  }
+  next();
+});
+
+// Database Connection with optimized pooling
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  maxPoolSize: 10,  // Maximum number of connections
+  minPoolSize: 5,   // Minimum number of connections
+  maxIdleTimeMS: 30000,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+})
+.then(() => console.log('✅ MongoDB Connected Successfully'))
+.catch((err) => console.error('❌ MongoDB Connection Error:', err));
+
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/recipes', require('./routes/recipes'));
+app.use('/api/comments', require('./routes/comments'));
+app.use('/api/upload', require('./routes/upload'));
+app.use('/api/messages', require('./routes/messages'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/planner', require('./routes/planner'));
+app.use('/api/subscriptions', require('./routes/subscriptions'));
+app.use('/api/security', require('./routes/security'));
+app.use('/api/achievements', require('./routes/achievementRoutes'));
+app.use('/api/recommendations', require('./routes/recommendationRoutes'));
+
+// Health Check Endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Plated API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 404 Handler
+app.use((req, res, next) => {
+  res.status(404).json({
+    status: 'error',
+    message: 'Route not found'
+  });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('Error:', err.stack);
+  
+  res.status(err.statusCode || 500).json({
+    status: 'error',
+    message: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
+
+// Start Server
+const PORT = process.env.PORT || 5000;
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+});
+
+// Socket.IO Setup (for real-time features)
+const io = require('socket.io')(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:3001',
+    credentials: true
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+  
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.log('❌ Unhandled Rejection! Shutting down...');
+  console.error(err);
+  server.close(() => process.exit(1));
+});
+
+module.exports = { app, io };
