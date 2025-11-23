@@ -105,6 +105,7 @@ app.use('/api/subscriptions', require('./routes/subscriptions'));
 app.use('/api/security', require('./routes/security'));
 app.use('/api/achievements', require('./routes/achievementRoutes'));
 app.use('/api/recommendations', require('./routes/recommendationRoutes'));
+app.use('/api/ai', require('./routes/ai')); // AI Features with Gemini
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
