@@ -39,8 +39,11 @@ app.use(cors({
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
-    // Check if origin is in allowed list
-    if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+    // Check if origin is in allowed list or is a Vercel preview URL
+    const isAllowed = allowedOrigins.some(allowed => origin.startsWith(allowed)) ||
+                      origin.includes('.vercel.app');
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
