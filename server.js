@@ -24,15 +24,26 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // CORS Configuration
+const allowedOrigins = [
+  'http://localhost:3001',
+  'http://localhost:5173',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:5173',
+  'https://plated.cloud',
+  'https://www.plated.cloud',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow all localhost origins for development
-    if (!origin || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
-      callback(null, true);
-    } else if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
       callback(null, true);
     } else {
-      callback(null, false);
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true
