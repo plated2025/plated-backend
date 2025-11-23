@@ -44,12 +44,15 @@ async function cleanupDatabase() {
     });
     console.log('✅ Connected to MongoDB\n');
 
-    // 1. Find and delete sample users
+    // 1. Find and delete sample users (including test users)
     console.log('🔍 Finding sample users...');
     const sampleUsers = await User.find({
       $or: [
         { email: { $in: SAMPLE_EMAILS } },
-        { username: { $in: SAMPLE_USERNAMES } }
+        { username: { $in: SAMPLE_USERNAMES } },
+        { fullName: { $regex: /^Test User \d+$/i } },  // "Test User 123"
+        { username: { $regex: /^testuser\d+$/i } },     // "testuser123"
+        { email: { $regex: /@example\.com$/i } }        // Any @example.com
       ]
     });
     
