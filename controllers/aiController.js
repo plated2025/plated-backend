@@ -119,3 +119,33 @@ exports.getCookingAdvice = async (req, res) => {
     });
   }
 };
+
+// @desc    Chat with AI assistant
+// @route   POST /api/ai/chat
+// @access  Private
+exports.chat = async (req, res) => {
+  try {
+    const { message, conversationHistory } = req.body;
+
+    if (!message) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide a message'
+      });
+    }
+
+    const response = await aiService.chat(message, conversationHistory || []);
+
+    res.status(200).json({
+      status: 'success',
+      data: { response }
+    });
+  } catch (error) {
+    console.error('AI chat error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to get AI response. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};

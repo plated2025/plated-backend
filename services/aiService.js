@@ -191,6 +191,47 @@ Keep the response concise (2-3 sentences), practical, and friendly.`;
       throw error;
     }
   }
+
+  /**
+   * Conversational AI assistant for food-related queries
+   * @param {String} message - User's message
+   * @param {Array} conversationHistory - Previous conversation (optional)
+   * @returns {String} AI response
+   */
+  async chat(message, conversationHistory = []) {
+    try {
+      // Build context from conversation history
+      let context = `You are a helpful AI food assistant for the Plated app. You can help users with:
+- Finding recipes and food creators
+- Nutrition advice and meal planning
+- Fitness nutrition and workout meals
+- Cooking tips and techniques
+- Shopping lists and ingredient suggestions
+- Diet recommendations
+
+Be friendly, concise, and helpful. Format responses with line breaks for readability.
+
+`;
+
+      // Add conversation history for context
+      if (conversationHistory.length > 0) {
+        context += "Conversation history:\n";
+        conversationHistory.forEach(msg => {
+          context += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
+        });
+        context += "\n";
+      }
+
+      context += `User: ${message}\nAssistant:`;
+
+      const result = await this.model.generateContent(context);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('AI Chat Error:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new AIService();

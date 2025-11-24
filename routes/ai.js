@@ -3,7 +3,8 @@ const {
   generateRecipes,
   scanFood,
   analyzeProduct,
-  getCookingAdvice
+  getCookingAdvice,
+  chat
 } = require('../controllers/aiController');
 const { protect } = require('../middleware/auth');
 
@@ -17,5 +18,6 @@ router.post('/generate-recipes', generateRecipes);
 router.post('/scan-food', scanFood);
 router.post('/analyze-product', analyzeProduct);
 router.post('/cooking-advice', getCookingAdvice);
+router.post('/chat', chat);
 
 module.exports = router;
