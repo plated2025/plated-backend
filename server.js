@@ -25,8 +25,10 @@ app.use('/api/', limiter);
 
 // CORS Configuration
 const allowedOrigins = [
+  'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
+  'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
   'http://127.0.0.1:5173',
   'https://plated.cloud',
@@ -105,6 +107,7 @@ app.use('/api/subscriptions', require('./routes/subscriptions'));
 app.use('/api/security', require('./routes/security'));
 app.use('/api/achievements', require('./routes/achievementRoutes'));
 app.use('/api/recommendations', require('./routes/recommendationRoutes'));
+app.use('/api/discovery', require('./routes/discovery')); // User discovery
 app.use('/api/ai', require('./routes/ai')); // AI Features with Gemini
 
 // Health Check Endpoint
