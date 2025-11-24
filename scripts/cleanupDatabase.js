@@ -10,7 +10,6 @@ require('dotenv').config();
 
 const User = require('../models/User');
 const Recipe = require('../models/Recipe');
-const Post = require('../models/Post');
 const Comment = require('../models/Comment');
 const Notification = require('../models/Notification');
 const Message = require('../models/Message');
@@ -69,17 +68,12 @@ async function cleanupDatabase() {
       console.log('   ✅ No sample users found\n');
     }
 
-    // 2. Delete posts/recipes created by sample users
+    // 2. Delete recipes created by sample users
     console.log('🔍 Finding sample recipes...');
-    const deletedRecipes = await Recipe.deleteMany({ author: { $in: sampleUserIds } });
+    const deletedRecipes = await Recipe.deleteMany({ creator: { $in: sampleUserIds } });
     console.log(`   ✅ Deleted ${deletedRecipes.deletedCount} sample recipes\n`);
 
-    // 3. Delete posts (reels) created by sample users
-    console.log('🔍 Finding sample posts/reels...');
-    const deletedPosts = await Post.deleteMany({ author: { $in: sampleUserIds } });
-    console.log(`   ✅ Deleted ${deletedPosts.deletedCount} sample posts\n`);
-
-    // 4. Delete comments by sample users
+    // 3. Delete comments by sample users
     console.log('🔍 Finding sample comments...');
     const deletedComments = await Comment.deleteMany({ user: { $in: sampleUserIds } });
     console.log(`   ✅ Deleted ${deletedComments.deletedCount} sample comments\n`);
@@ -110,7 +104,6 @@ async function cleanupDatabase() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log(`✅ Users deleted:         ${sampleUsers.length}`);
     console.log(`✅ Recipes deleted:       ${deletedRecipes.deletedCount}`);
-    console.log(`✅ Posts deleted:         ${deletedPosts.deletedCount}`);
     console.log(`✅ Comments deleted:      ${deletedComments.deletedCount}`);
     console.log(`✅ Notifications deleted: ${deletedNotifications.deletedCount}`);
     console.log(`✅ Messages deleted:      ${deletedMessages.deletedCount}`);
@@ -152,10 +145,6 @@ async function cleanupAllData(keepAdminEmails = []) {
     // Delete all recipes
     const deletedRecipes = await Recipe.deleteMany({});
     console.log(`✅ Deleted ${deletedRecipes.deletedCount} recipes`);
-
-    // Delete all posts
-    const deletedPosts = await Post.deleteMany({});
-    console.log(`✅ Deleted ${deletedPosts.deletedCount} posts`);
 
     // Delete all comments
     const deletedComments = await Comment.deleteMany({});

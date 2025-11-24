@@ -11,15 +11,28 @@ const {
 /**
  * @route   GET /api/discovery/users/suggested
  * @desc    Get suggested users to follow
- * @access  Private
+ * @access  Public (personalized if authenticated)
  */
-router.get('/users/suggested', protect, async (req, res) => {
+router.get('/users/suggested', async (req, res) => {
   try {
     const { limit } = req.query;
     
-    const suggestions = await getSuggestedUsers(req.user.id, {
-      limit: parseInt(limit) || 10
-    });
+    // If authenticated, get personalized suggestions
+    // Otherwise, get trending users
+    const userId = req.user?.id || null;
+    
+    let suggestions;
+    if (userId) {
+      suggestions = await getSuggestedUsers(userId, {
+        limit: parseInt(limit) || 10
+      });
+    } else {
+      // For non-authenticated users, show trending users
+      suggestions = await getTrendingUsers({
+        limit: parseInt(limit) || 10,
+        timeWindow: 30
+      });
+    }
     
     res.json({
       status: 'success',

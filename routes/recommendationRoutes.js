@@ -13,16 +13,27 @@ const {
 /**
  * @route   GET /api/recommendations
  * @desc    Get personalized recipe recommendations
- * @access  Private
+ * @access  Public (personalized if authenticated)
  */
-router.get('/', protect, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { limit, category } = req.query;
+    const userId = req.user?.id || null;
     
-    const recommendations = await getPersonalizedRecommendations(req.user.id, {
-      limit: parseInt(limit) || 10,
-      category
-    });
+    let recommendations;
+    if (userId) {
+      // Authenticated: get personalized recommendations
+      recommendations = await getPersonalizedRecommendations(userId, {
+        limit: parseInt(limit) || 10,
+        category
+      });
+    } else {
+      // Non-authenticated: get trending recipes
+      recommendations = await getTrendingRecipes({
+        limit: parseInt(limit) || 10,
+        timeWindow: 7
+      });
+    }
     
     res.json({
       status: 'success',
@@ -195,9 +206,9 @@ router.get('/similar/:recipeId', async (req, res) => {
 /**
  * @route   POST /api/recommendations/weather
  * @desc    Get weather-based recipe recommendations
- * @access  Private
+ * @access  Public
  */
-router.post('/weather', protect, async (req, res) => {
+router.post('/weather', async (req, res) => {
   try {
     const { weather, limit } = req.body;
     
