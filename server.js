@@ -139,21 +139,17 @@ const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
 });
 
-// Socket.IO Setup (for real-time features)
+// Socket.IO Setup (for real-time features + WebRTC signaling)
 const io = require('socket.io')(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3001',
+    origin: allowedOrigins,
     credentials: true
   }
 });
 
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-  
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
-});
+// Setup WebRTC Signaling for Live Streams
+const { setupWebRTCSignaling } = require('./services/webrtcSignaling');
+setupWebRTCSignaling(io);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
