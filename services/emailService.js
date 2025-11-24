@@ -3,35 +3,38 @@ const nodemailer = require('nodemailer');
 // Create transporter (optional for development)
 let transporter = null;
 
-try {
-  transporter = nodemailer.createTransporter({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: process.env.EMAIL_PORT || 587,
-    secure: false, // true for 465, false for other ports
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
+// Only initialize email service if credentials are provided
+if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+  try {
+    transporter = nodemailer.createTransporter({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: process.env.EMAIL_PORT || 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
 
-  // Verify transporter configuration
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+    // Verify transporter configuration
     transporter.verify((error, success) => {
       if (error) {
         console.log('⚠️  Email configuration error:', error.message);
         console.log('📧 Email service disabled - verification emails won\'t be sent');
+        transporter = null;
       } else {
         console.log('✅ Email service is ready');
       }
     });
-  } else {
-    console.log('⚠️  Email credentials not configured');
-    console.log('📧 Email service disabled - verification emails won\'t be sent');
-    console.log('💡 Tip: Add EMAIL_USER and EMAIL_PASSWORD to .env file to enable emails');
+  } catch (error) {
+    console.log('⚠️  Email service initialization failed:', error.message);
+    console.log('📧 Email service disabled - app will continue without email functionality');
+    transporter = null;
   }
-} catch (error) {
-  console.log('⚠️  Email service initialization failed:', error.message);
-  console.log('📧 Email service disabled - app will continue without email functionality');
+} else {
+  console.log('⚠️  Email credentials not configured');
+  console.log('📧 Email service disabled - verification emails won\'t be sent');
+  console.log('💡 Tip: Add EMAIL_USER and EMAIL_PASSWORD to .env file to enable emails');
 }
 
 /**

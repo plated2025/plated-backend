@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "npm install",
+    "build": "npm ci --include=dev",
     "test": "jest --watchAll",
     "cleanup": "node scripts/cleanupDatabase.js",
     "cleanup:all": "node scripts/cleanupDatabase.js --all"
