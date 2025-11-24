@@ -36,6 +36,12 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             if (!user.avatar && profile.photos && profile.photos[0]) {
               user.avatar = profile.photos[0].value;
             }
+            // Mark onboarding as complete for OAuth users
+            if (!user.hasCompletedOnboarding) {
+              user.hasCompletedOnboarding = true;
+              user.hasSelectedUserType = true;
+              user.userType = user.userType || 'regular';
+            }
             await user.save();
             return done(null, user);
           }
@@ -49,7 +55,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           googleId: profile.id,
           authProvider: 'google',
           avatar: profile.photos && profile.photos[0] ? profile.photos[0].value : undefined,
-          emailVerified: true // Google emails are pre-verified
+          emailVerified: true, // Google emails are pre-verified
+          hasCompletedOnboarding: true, // Skip onboarding for OAuth users
+          hasSelectedUserType: true,
+          userType: 'regular' // Default to regular user
         });
         
         console.log('New Google user created:', user._id);
@@ -110,6 +119,12 @@ if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPL
                 // Link Apple account
                 user.appleId = appleId;
                 user.authProvider = 'apple';
+                // Mark onboarding as complete for OAuth users
+                if (!user.hasCompletedOnboarding) {
+                  user.hasCompletedOnboarding = true;
+                  user.hasSelectedUserType = true;
+                  user.userType = user.userType || 'regular';
+                }
                 await user.save();
                 return done(null, user);
               }
@@ -126,7 +141,10 @@ if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPL
               email: email || `${appleId}@privaterelay.appleid.com`,
               appleId,
               authProvider: 'apple',
-              emailVerified: true // Apple emails are pre-verified
+              emailVerified: true, // Apple emails are pre-verified
+              hasCompletedOnboarding: true, // Skip onboarding for OAuth users
+              hasSelectedUserType: true,
+              userType: 'regular' // Default to regular user
             });
             
             console.log('New Apple user created:', user._id);
