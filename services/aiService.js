@@ -1,13 +1,27 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize Gemini AI - with safety check
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  console.warn('⚠️  WARNING: GEMINI_API_KEY not set. AI features will be disabled.');
+}
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 // AI Service for Plated App
 class AIService {
   constructor() {
-    this.model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    this.visionModel = genAI.getGenerativeModel({ model: 'gemini-pro-vision' });
+    if (genAI) {
+      this.model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      this.visionModel = genAI.getGenerativeModel({ model: 'gemini-pro-vision' });
+    } else {
+      this.model = null;
+      this.visionModel = null;
+    }
+  }
+
+  // Check if AI is available
+  isAvailable() {
+    return this.model !== null && this.visionModel !== null;
   }
 
   /**
@@ -16,6 +30,10 @@ class AIService {
    * @returns {Array} Recipe suggestions
    */
   async generateRecipes(ingredients) {
+    if (!this.isAvailable()) {
+      throw new Error('AI service is not available. Please configure GEMINI_API_KEY.');
+    }
+
     try {
       const prompt = `As a professional chef, suggest 3 creative and delicious recipes using these ingredients: ${ingredients.join(', ')}.
 
@@ -60,6 +78,10 @@ Only return the JSON array, no additional text.`;
    * @returns {Object} Detected ingredients and recipe suggestions
    */
   async analyzeFoodImage(imageBase64) {
+    if (!this.isAvailable()) {
+      throw new Error('AI service is not available. Please configure GEMINI_API_KEY.');
+    }
+
     try {
       // Remove data URL prefix if present
       const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
@@ -113,6 +135,10 @@ Only return JSON, no additional text.`;
    * @returns {Object} Product analysis with nutrition data
    */
   async analyzeProduct(imageBase64) {
+    if (!this.isAvailable()) {
+      throw new Error('AI service is not available. Please configure GEMINI_API_KEY.');
+    }
+
     try {
       const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
       
@@ -178,6 +204,10 @@ Only return JSON, no additional text.`;
    * @returns {String} AI response
    */
   async getCookingAdvice(query) {
+    if (!this.isAvailable()) {
+      throw new Error('AI service is not available. Please configure GEMINI_API_KEY.');
+    }
+
     try {
       const prompt = `As a professional chef, provide helpful cooking advice for this question: "${query}"
       
@@ -199,6 +229,10 @@ Keep the response concise (2-3 sentences), practical, and friendly.`;
    * @returns {String} AI response
    */
   async chat(message, conversationHistory = []) {
+    if (!this.isAvailable()) {
+      throw new Error('AI service is not available. Please configure GEMINI_API_KEY.');
+    }
+
     try {
       // Build context from conversation history
       let context = `You are a helpful AI food assistant for the Plated app. You can help users with:
