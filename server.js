@@ -81,8 +81,6 @@ app.use((req, res, next) => {
 
 // Database Connection with optimized pooling
 mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   maxPoolSize: 10,  // Maximum number of connections
   minPoolSize: 5,   // Minimum number of connections
   maxIdleTimeMS: 30000,
