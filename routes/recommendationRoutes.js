@@ -192,4 +192,76 @@ router.get('/similar/:recipeId', async (req, res) => {
   }
 });
 
+/**
+ * @route   POST /api/recommendations/weather
+ * @desc    Get weather-based recipe recommendations
+ * @access  Private
+ */
+router.post('/weather', protect, async (req, res) => {
+  try {
+    const { weather, limit } = req.body;
+    
+    if (!weather || !weather.temp) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Weather data required (temp, condition)'
+      });
+    }
+
+    const Recipe = require('../models/Recipe');
+    
+    // Determine recipe type based on weather
+    let searchTags = [];
+    let searchCategory = null;
+    
+    if (weather.isCold || weather.temp < 10) {
+      searchTags = ['soup', 'stew', 'hot', 'warm', 'comfort'];
+      searchCategory = 'warm';
+    } else if (weather.isHot || weather.temp > 25) {
+      searchTags = ['salad', 'cold', 'fresh', 'light', 'summer'];
+      searchCategory = 'light';
+    } else if (weather.isRainy) {
+      searchTags = ['comfort', 'cozy', 'warm', 'hearty'];
+    } else {
+      searchTags = ['balanced', 'healthy', 'fresh'];
+    }
+
+    // Build query
+    const query = {
+      $or: [
+        { tags: { $in: searchTags } },
+        { description: { $regex: searchTags.join('|'), $options: 'i' } }
+      ]
+    };
+
+    if (searchCategory) {
+      query.category = new RegExp(searchCategory, 'i');
+    }
+
+    const recommendations = await Recipe.find(query)
+      .limit(parseInt(limit) || 10)
+      .sort({ likes: -1 })
+      .populate('author', 'name username avatar verified')
+      .lean();
+    
+    res.json({
+      status: 'success',
+      weather: {
+        temp: weather.temp,
+        condition: weather.condition,
+        description: weather.description
+      },
+      count: recommendations.length,
+      data: recommendations
+    });
+  } catch (error) {
+    console.error('Get weather recommendations error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error fetching weather recommendations',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
