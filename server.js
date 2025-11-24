@@ -94,6 +94,8 @@ mongoose.connect(process.env.MONGODB_URI, {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/recipes', require('./routes/recipes'));
+app.use('/api/stories', require('./routes/stories')); // Story posts
+app.use('/api/collections', require('./routes/collections')); // Recipe collections
 app.use('/api/comments', require('./routes/comments'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/messages', require('./routes/messages'));
