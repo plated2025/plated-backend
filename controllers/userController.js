@@ -74,7 +74,8 @@ exports.updateProfile = async (req, res) => {
     // Check username availability if it's being updated
     if (username) {
       const currentUser = await User.findById(req.user.id);
-      if (username.toLowerCase() !== currentUser.username.toLowerCase()) {
+      // Only check if username is taken if it's different from current (and current exists)
+      if (!currentUser.username || username.toLowerCase() !== currentUser.username.toLowerCase()) {
         const existingUser = await User.findOne({ username: username.toLowerCase() });
         if (existingUser) {
           return res.status(400).json({
