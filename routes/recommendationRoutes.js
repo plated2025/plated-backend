@@ -252,7 +252,7 @@ router.post('/weather', async (req, res) => {
     const recommendations = await Recipe.find(query)
       .limit(parseInt(limit) || 10)
       .sort({ likes: -1 })
-      .populate('author', 'name username avatar verified')
+      .populate('creator', 'fullName username avatar isVerified')
       .lean();
     
     res.json({

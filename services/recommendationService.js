@@ -143,7 +143,7 @@ async function getPersonalizedRecommendations(userId, options = {}) {
     // Get pool of recipes
     const recipePool = await Recipe.find(query)
       .limit(limit * 3) // Get more to filter
-      .populate('author', 'fullName username avatar')
+      .populate('creator', 'fullName username avatar')
       .lean();
     
     // Score each recipe
@@ -185,7 +185,7 @@ async function getTrendingRecipes(options = {}) {
     })
       .sort({ likes: -1, views: -1 })
       .limit(limit)
-      .populate('author', 'fullName username avatar')
+      .populate('creator', 'fullName username avatar')
       .lean();
     
     return trending;
@@ -217,7 +217,7 @@ async function getMealSuggestions(userId, mealType, limit = 5) {
       ]
     })
       .limit(limit * 2)
-      .populate('author', 'fullName username avatar')
+      .populate('creator', 'fullName username avatar')
       .lean();
     
     // Score and sort
@@ -245,10 +245,10 @@ async function getCookItAgainSuggestions(userId, limit = 5) {
   try {
     // In production, this would query user's cooking history
     // For now, return user's own recipes
-    const recipes = await Recipe.find({ author: userId })
+    const recipes = await Recipe.find({ creator: userId })
       .sort({ likes: -1 })
       .limit(limit)
-      .populate('author', 'fullName username avatar')
+      .populate('creator', 'fullName username avatar')
       .lean();
     
     return recipes;
@@ -281,7 +281,7 @@ async function getSimilarRecipes(recipeId, limit = 5) {
       ]
     })
       .limit(limit)
-      .populate('author', 'fullName username avatar')
+      .populate('creator', 'fullName username avatar')
       .lean();
     
     return similar;
