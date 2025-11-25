@@ -65,7 +65,8 @@ exports.updateProfile = async (req, res) => {
       avatar,
       coverImage,
       dietaryPreferences,
-      settings
+      settings,
+      userType
     } = req.body;
 
     const updateData = {};
@@ -94,6 +95,7 @@ exports.updateProfile = async (req, res) => {
     if (coverImage !== undefined) updateData.coverImage = coverImage;
     if (dietaryPreferences) updateData.dietaryPreferences = dietaryPreferences;
     if (settings) updateData.settings = settings;
+    if (userType) updateData.userType = userType;
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
